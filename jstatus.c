@@ -30,6 +30,10 @@
 
 #define DZEN_CMD "dzen2 -x 1300 -y 1061"
 #define SYSCTL_TEMP "hw.acpi.thermal.tz1.temperature"
+#define SYSCTL_BAT_STATE "hw.acpi.battery.state"
+#define SYSCTL_BAT_LIFE "hw.acpi.battery.life"
+#define SYSCTL_BAT_TIME "hw.acpi.battery.time"
+#define SYSCTL_CPU_TIME "kern.cp_time"
 
 #define XBM_PATH "/usr/home/jlaffaye/.dzen/"
 #define ICON_POWER_AC XBM_PATH "power-ac.xbm"
@@ -85,16 +89,16 @@ print_bat(FILE *fp)
 	int state, life, remaining;
 	int hours, minutes;
 
-	sysctlbyname("hw.acpi.battery.state", &state, &sz, NULL, 0);
+	sysctlbyname(SYSCTL_BAT_STATE, &state, &sz, NULL, 0);
 
 	if (state == STATE_DISCHARGING || state == STATE_CHARGING) {
-		sysctlbyname("hw.acpi.battery.life", &life, &sz, NULL, 0);
+		sysctlbyname(SYSCTL_BAT_LIFE, &life, &sz, NULL, 0);
 	} else {
 		life = 100;
 	}
 
 	if (state == STATE_DISCHARGING && prev_state != STATE_DISCHARGING) {
-		sysctlbyname("hw.acpi.battery.", &remaining, &sz, NULL, 0);
+		sysctlbyname(SYSCTL_BAT_TIME, &remaining, &sz, NULL, 0);
 		hours = remaining / 60;
 		minutes = remaining % 60;
 		show_message("ON BATTERY");
@@ -106,7 +110,7 @@ print_bat(FILE *fp)
 
 	if (state == STATE_AC || state == STATE_CHARGING) {
 		print_icon(fp, ICON_POWER_AC);
-	} else if (state == 1) {
+	} else if (state == STATE_DISCHARGING) {
 		print_icon(fp, ICON_POWER_BAT);
 	} else {
 		fprintf(fp, "[?] ");
@@ -142,7 +146,7 @@ print_cpu_usage(FILE *fp)
 	long cp_time[CPUSTATES];
 	size_t size = sizeof(cp_time);
 
-	sysctlbyname("kern.cp_time", &cp_time, &size, NULL, 0);
+	sysctlbyname(SYSCTL_CPU_TIME, &cp_time, &size, NULL, 0);
 
 	curr_user = cp_time[CP_USER];
 	curr_nice = cp_time[CP_NICE];
