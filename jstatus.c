@@ -28,7 +28,7 @@
 
 #include <xosd.h>
 
-#define DZEN_CMD "dzen2 -x 1300 -y 1061"
+#define DZEN_CMD "dzen2 -x 1400 -y 1061"
 #define SYSCTL_TEMP "hw.acpi.thermal.tz1.temperature"
 #define SYSCTL_BAT_STATE "hw.acpi.battery.state"
 #define SYSCTL_BAT_LIFE "hw.acpi.battery.life"
@@ -125,13 +125,20 @@ print_bat(FILE *fp)
 static void
 print_temp(FILE *fp)
 {
+	static int prev_temp;
 	int temp;
 	size_t sz = sizeof(temp);
 
 	sysctlbyname(SYSCTL_TEMP, &temp, &sz, NULL, 0);
+	temp = TZ_KELVTOC(temp);
+
+	if (temp >= 80 && prev_temp < 80) {
+		show_message("High temperature");
+	}
 
 	print_icon(fp, ICON_TEMP);
-	fprintf(fp, "%d.%d", TZ_KELVTOC(temp));
+	fprintf(fp, "%d C", temp);
+	prev_temp = temp;
 }
 
 static void
